@@ -45,8 +45,9 @@ class Spinwheel extends StatefulWidget {
   /// Should be handled in the constructor.
   final int itemCount;
 
-  /// The duration (in milliseconds) of the rotation animation.
-  final int rotationDuration;
+  /// The duration  of the rotation animation.
+  // final int rotationDuration;
+  final Duration duration;
 
   /// Decides whether touching the spinner will make it rotate in the
   /// previously panned direction (default-clockwise).
@@ -133,7 +134,8 @@ class Spinwheel extends StatefulWidget {
     required this.autoPlay,
     required this.onChanged,
     this.size = 100.0,
-    this.rotationDuration = 200,
+    // this.rotationDuration = 200,
+    this.duration = const Duration(milliseconds: 200),
     this.touchToRotate = true,
     this.autoPlayDuration = const Duration(seconds: 5),
     this.longPressToPauseAutoplay = false,
@@ -149,7 +151,7 @@ class Spinwheel extends StatefulWidget {
     this.centerPiecePaint,
     this.highlightPaint,
     this.shutterPaint,
-    this.wheelOrientation = 0,
+    this.wheelOrientation = 180,
     this.fadeDuration = const Duration(milliseconds: 1500),
     this.loadingIndicator,
   }) : itemCount = items.isNotEmpty ? items.length : imageItems.length;
@@ -189,7 +191,7 @@ class _SpinwheelState extends State<Spinwheel> with SingleTickerProviderStateMix
   }
 
   void initFields() {
-    _animationController = AnimationController(duration: Duration(milliseconds: widget.rotationDuration), vsync: this);
+    _animationController = AnimationController(duration: widget.duration, vsync: this);
 
     _rotationAnimation = Tween(begin: 0.0, end: 1.0).animate(_animationController)
       ..addListener(_rotationHandler)
