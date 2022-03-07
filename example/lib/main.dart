@@ -1,14 +1,13 @@
 import 'dart:math';
 
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-
 import 'package:flutter_spinwheel/flutter_spinwheel.dart';
-import 'package:carousel_slider/carousel_slider.dart';
 
 List<Widget> getAppBarActions(BuildContext context) {
   return [
-    FlatButton(
+    ElevatedButton(
       child: Icon(
         Icons.device_unknown,
         color: Colors.white,
@@ -17,7 +16,7 @@ List<Widget> getAppBarActions(BuildContext context) {
         Navigator.pushReplacementNamed(context, '/sample');
       },
     ),
-    FlatButton(
+    ElevatedButton(
       child: Icon(
         Icons.insert_emoticon,
         color: Colors.white,
@@ -26,7 +25,7 @@ List<Widget> getAppBarActions(BuildContext context) {
         Navigator.pushReplacementNamed(context, '/emoji');
       },
     ),
-    FlatButton(
+    ElevatedButton(
       child: Icon(
         Icons.image,
         color: Colors.white,
@@ -69,11 +68,12 @@ class SpinwheelSampleApp extends StatefulWidget {
 }
 
 class _SpinwheelSampleAppState extends State<SpinwheelSampleApp> {
-  List<String> questions;
-  List<List<dynamic>> choices;
-  List<String> answers;
-  int select;
-  String currentText;
+  late final List<String> questions;
+  late final List<List<dynamic>> choices;
+  late final List<String> answers;
+  int select = 0;
+
+  // String currentText;
 
   @override
   void initState() {
@@ -123,18 +123,13 @@ class _SpinwheelSampleAppState extends State<SpinwheelSampleApp> {
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: <Widget>[
                       Text(questions[index]),
-                      Text(answers[index] == '😠'
-                          ? '${answers[index]} None of these'
-                          : answers[index]),
+                      Text(answers[index] == '😠' ? '${answers[index]} None of these' : answers[index]),
                       Spinwheel(
-                        items: choices[index][0] is String
-                            ? choices[index].cast<String>()
-                            : null,
-                        imageItems: choices[index][0] is NamedImage
-                            ? choices[index].cast<NamedImage>()
-                            : null,
+                        items: choices[index][0] is String ? choices[index].cast<String>() : [],
+                        imageItems: choices[index][0] is NamedImage ? choices[index].cast<NamedImage>() : [],
                         select: select,
                         autoPlay: false,
+                        size: 250,
                         hideOthers: false,
                         shouldDrawBorder: false,
                         onChanged: (val) {
@@ -158,15 +153,15 @@ class SpinwheelEmojiDemo extends StatefulWidget {
 }
 
 class _SpinwheelEmojiDemoState extends State<SpinwheelEmojiDemo> {
-  List<String> items;
-  int select;
-  String currentText;
+  List<String> items = ['🏘', '🚓', '🚛', '🏍', '🎉'];
+  int select = 2;
+  late String currentText;
 
   @override
   void initState() {
     super.initState();
-    items = ['🏘', '🚓', '🚛', '🏍', '🎉'];
-    select = 2;
+    // items = ['🏘', '🚓', '🚛', '🏍', '🎉'];
+    // select = 2;
     currentText = items[select];
   }
 
@@ -189,6 +184,7 @@ class _SpinwheelEmojiDemoState extends State<SpinwheelEmojiDemo> {
           ),
           Spinwheel(
             items: items,
+            imageItems: [],
             onChanged: (val) {
               if (this.mounted)
                 setState(() {
@@ -196,7 +192,7 @@ class _SpinwheelEmojiDemoState extends State<SpinwheelEmojiDemo> {
                 });
             },
             shouldHighlight: false,
-            size: 150.0,
+            size: 250.0,
             select: 2,
             rotationDuration: 250,
             autoPlay: true,
@@ -214,9 +210,10 @@ class SpinwheelImageDemo extends StatefulWidget {
 }
 
 class _SpinwheelImageDemoState extends State<SpinwheelImageDemo> {
-  List<String> carouselNames;
-  List<NamedImage> imgPack;
-  CarouselSlider carousel;
+  late List<String> carouselNames;
+  late List<NamedImage> imgPack;
+  late CarouselSlider carousel;
+  final CarouselController _carouselController = CarouselController();
 
   @override
   void initState() {
@@ -239,10 +236,7 @@ class _SpinwheelImageDemoState extends State<SpinwheelImageDemo> {
         path: 'assets/images/budgie.jpg',
         name: carouselNames[2],
       ),
-      NamedImage(
-          path: 'assets/images/goldfish.jpg',
-          name: carouselNames[3],
-          offsetX: 1.2),
+      NamedImage(path: 'assets/images/goldfish.jpg', name: carouselNames[3], offsetX: 1.2),
     ];
 
     // For Image example
@@ -254,11 +248,11 @@ class _SpinwheelImageDemoState extends State<SpinwheelImageDemo> {
           child: Image.asset(img.path),
         );
       }).toList(),
-      autoPlay: false,
-      enlargeCenterPage: true,
-      viewportFraction: 1.0,
-      aspectRatio: 2.0,
-      initialPage: 2,
+      options: CarouselOptions(
+        autoPlay: true,
+        aspectRatio: 2.0,
+        enlargeCenterPage: true,
+      ),
     );
   }
 
@@ -280,10 +274,14 @@ class _SpinwheelImageDemoState extends State<SpinwheelImageDemo> {
             child: Spinwheel(
               size: 250.0,
               imageItems: imgPack,
+              items: [],
               select: 1,
               onChanged: (val) {
-                carousel.animateToPage(carouselNames.indexOf(val),
-                    duration: Duration(seconds: 1), curve: Curves.linear);
+                _carouselController.animateToPage(
+                  carouselNames.indexOf(val),
+                  duration: Duration(seconds: 1),
+                  curve: Curves.linear,
+                );
               },
               rotationDuration: 250,
               autoPlay: true,

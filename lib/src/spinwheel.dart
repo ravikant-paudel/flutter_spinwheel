@@ -1,10 +1,11 @@
-import 'dart:ui' as ui;
 import 'dart:async';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_spinwheel/flutter_spinwheel.dart';
 
-import 'spinwheel_painter.dart';
 import 'named_image.dart';
+import 'spinwheel_painter.dart';
 import 'utilities.dart';
 
 typedef VoidPassValue = void Function(String value);
@@ -61,22 +62,22 @@ class Spinwheel extends StatefulWidget {
   final bool longPressToPauseAutoplay;
 
   /// Paint settings used for drawing wheel. Customizable
-  final Paint wheelPaint;
+  final Paint? wheelPaint;
 
   /// Paint settings used for drawing wheel border if applicable. Customizable
-  final Paint borderPaint;
+  final Paint? borderPaint;
 
   /// Paint settings used for drawing the dividers if applicable. Customizable
-  final Paint sectorDividerPaint;
+  final Paint? sectorDividerPaint;
 
   /// Paint settings used for drawing the center piece (circle) if applicable. Customizable
-  final Paint centerPiecePaint;
+  final Paint? centerPiecePaint;
 
   /// Paint settings used for drawing the highlight if applicable. Customizable
-  final Paint highlightPaint;
+  final Paint? highlightPaint;
 
   /// Paint settings used for drawing the shutter if applicable. Customizable
-  final Paint shutterPaint;
+  final Paint? shutterPaint;
 
   /// Determines whether sector dividers should be drawn.
   final bool shouldDrawDividers;
@@ -105,7 +106,7 @@ class Spinwheel extends StatefulWidget {
 
   /// This widget is displayed while the images for the spinner are being loaded.
   /// Default load indicator is a text widget with three dots.
-  final Widget loadingIndicator;
+  final Widget? loadingIndicator;
 
   /// Creates a SpinnerWheel (sort of like a radial menu) which takes an items list (list of strings [items])
   /// or images list (list of images [imageItems]). It provides callback [onChanged] to keep track of
@@ -125,64 +126,50 @@ class Spinwheel extends StatefulWidget {
   ///       ..,
   ///),
   /// ```
-  Spinwheel(
-      {this.items,
-      this.imageItems,
-      @required this.select,
-      this.size = 100.0,
-      @required this.onChanged,
-      this.rotationDuration = 200,
-      this.touchToRotate = true,
-      @required this.autoPlay,
-      this.autoPlayDuration = const Duration(seconds: 5),
-      this.longPressToPauseAutoplay = false,
-      this.shouldDrawDividers = true,
-      this.shouldDrawBorder = true,
-      this.shouldDrawCenterPiece = true,
-      this.shouldHighlight = true,
-      this.hideOthers = true,
-      this.highlightWhileRotating = false,
-      this.wheelPaint,
-      this.borderPaint,
-      this.sectorDividerPaint,
-      this.centerPiecePaint,
-      this.highlightPaint,
-      this.shutterPaint,
-      this.wheelOrientation = 0,
-      this.fadeDuration = const Duration(milliseconds: 1500),
-      this.loadingIndicator})
-      : itemCount = items != null ? items.length : imageItems.length,
-        assert(
-          (items != null && imageItems == null) ||
-              (items == null && imageItems != null),
-          'Spinwheel widget can only take either [items] or [imageItems] parameter'
-          'and not both. Please remove one to clear this exception.',
-        ),
-        assert(
-          (onChanged != null),
-          'Spinwheel requires an onChange function. If it is not required,'
-          'pass an empty function with a string parameter.',
-        ),
-        assert(select != null),
-        assert(autoPlay != null);
+  Spinwheel({
+    required this.items,
+    required this.imageItems,
+    required this.select,
+    required this.autoPlay,
+    required this.onChanged,
+    this.size = 100.0,
+    this.rotationDuration = 200,
+    this.touchToRotate = true,
+    this.autoPlayDuration = const Duration(seconds: 5),
+    this.longPressToPauseAutoplay = false,
+    this.shouldDrawDividers = true,
+    this.shouldDrawBorder = true,
+    this.shouldDrawCenterPiece = true,
+    this.shouldHighlight = true,
+    this.hideOthers = true,
+    this.highlightWhileRotating = false,
+    this.wheelPaint,
+    this.borderPaint,
+    this.sectorDividerPaint,
+    this.centerPiecePaint,
+    this.highlightPaint,
+    this.shutterPaint,
+    this.wheelOrientation = 0,
+    this.fadeDuration = const Duration(milliseconds: 1500),
+    this.loadingIndicator,
+  }) : itemCount = items.isNotEmpty ? items.length : imageItems.length;
 
   @override
   _SpinwheelState createState() => _SpinwheelState();
 }
 
-class _SpinwheelState extends State<Spinwheel>
-    with SingleTickerProviderStateMixin {
+class _SpinwheelState extends State<Spinwheel> with SingleTickerProviderStateMixin {
   // The animation controller that controls the rotation of the spinwheel.
-  AnimationController _rotationController;
-  Animation _rotationAnimation;
+  late final AnimationController _animationController;
+  late final Animation _rotationAnimation;
 
   // To determine whether the pan on the wheel results in clockwise or
   // counter-clockwise motion.
   bool _movingClockwise = true;
-  double _velocity;
+  double _velocity = 0;
 
   // Unified list for list of String and NamedImage.
-  List<dynamic> _spinnerItems;
+  late final List<dynamic> _spinnerItems;
 
   // Used by components to check whether the given items are images or not.
   bool _isImageList = false;
@@ -191,9 +178,9 @@ class _SpinwheelState extends State<Spinwheel>
   List<ui.Image> loadedImages = [];
 
   // Timer for autoplay.
-  Timer _autoPlayTimer;
+  Timer? _autoPlayTimer;
 
-  Widget _loadingIndicator;
+  late final Widget _loadingIndicator;
 
   @override
   void initState() {
@@ -202,17 +189,17 @@ class _SpinwheelState extends State<Spinwheel>
   }
 
   void initFields() {
-    _rotationController = AnimationController(
-        duration: Duration(milliseconds: widget.rotationDuration), vsync: this);
+    _animationController = AnimationController(duration: Duration(milliseconds: widget.rotationDuration), vsync: this);
 
-    _rotationAnimation =
-        Tween(begin: 0.0, end: 1.0).animate(_rotationController)
-          ..addListener(_rotationHandler)
-          ..addStatusListener(_rotationStatusHandler);
+    _rotationAnimation = Tween(begin: 0.0, end: 1.0).animate(_animationController)
+      ..addListener(_rotationHandler)
+      ..addStatusListener(_rotationStatusHandler);
 
     // Assigning to a unified list
-    _spinnerItems = widget.items ?? widget.imageItems;
-    _isImageList = widget.imageItems != null;
+    // _spinnerItems = widget.items ?? widget.imageItems;
+    _spinnerItems = widget.items.isNotEmpty ? widget.items : widget.imageItems;
+    _isImageList = widget.imageItems.isNotEmpty;
+    print('_isImageList $_isImageList');
 
     // If image details are provided, load them.
     if (_isImageList) {
@@ -248,7 +235,7 @@ class _SpinwheelState extends State<Spinwheel>
         previousItem();
       else
         nextItem();
-      _rotationController.reset();
+      _animationController.reset();
     }
   }
 
@@ -266,7 +253,9 @@ class _SpinwheelState extends State<Spinwheel>
       fit: BoxFit.scaleDown,
       child: AnimatedOpacity(
         opacity: _isImageList
-            ? (loadedImages.length == widget.imageItems.length) ? 1 : 0
+            ? (loadedImages.length == widget.imageItems.length)
+                ? 1
+                : 0
             : 1,
         duration: widget.fadeDuration,
         child: GestureDetector(
@@ -280,7 +269,7 @@ class _SpinwheelState extends State<Spinwheel>
               widget.itemCount,
               _isImageList,
               _spinnerItems,
-              _isImageList ? loadedImages : null,
+              _isImageList ? loadedImages : [],
               _movingClockwise,
               _rotationAnimation,
               widget.select,
@@ -290,12 +279,12 @@ class _SpinwheelState extends State<Spinwheel>
               widget.hideOthers,
               widget.shouldHighlight,
               widget.highlightWhileRotating,
-              widget.wheelPaint,
-              widget.borderPaint,
-              widget.sectorDividerPaint,
-              widget.centerPiecePaint,
-              widget.highlightPaint,
-              widget.shutterPaint,
+              widget.wheelPaint ?? PainterPresets().wheelPaintPreset,
+              widget.borderPaint ?? PainterPresets().borderPaintPreset,
+              widget.sectorDividerPaint ?? PainterPresets().sectorDividerPaintPreset,
+              widget.centerPiecePaint ?? PainterPresets().centerPiecePaintPreset,
+              widget.highlightPaint ?? PainterPresets().highlightPaintPreset,
+              widget.shutterPaint ?? PainterPresets().shutterPaintPreset,
               widget.wheelOrientation,
             ),
             child: Container(
@@ -306,9 +295,9 @@ class _SpinwheelState extends State<Spinwheel>
         ),
       ),
     );
-
+    final equalImage = loadedImages.length == widget.imageItems.length;
     return _isImageList
-        ? (loadedImages.length == widget.imageItems.length)
+        ? equalImage
             ? wheel
             : _loadingIndicator
         : wheel;
@@ -348,10 +337,8 @@ class _SpinwheelState extends State<Spinwheel>
     double absX = update.delta.dx.abs();
     double absY = update.delta.dy.abs();
 
-    bool isHorizontalClockwiseMotion =
-        (onTop && panningRight) || (onBottom && panningLeft);
-    bool isVerticalClockwiseMotion =
-        (onLeft && panningUp) || (onRight && panningDown);
+    bool isHorizontalClockwiseMotion = (onTop && panningRight) || (onBottom && panningLeft);
+    bool isVerticalClockwiseMotion = (onLeft && panningUp) || (onRight && panningDown);
 
     double horizontalRotation = isHorizontalClockwiseMotion ? absX : -absX;
     double verticalRotation = isVerticalClockwiseMotion ? absY : -absY;
@@ -367,11 +354,10 @@ class _SpinwheelState extends State<Spinwheel>
   // Function to be called at the end of each pan session and
   // trigger the rotation animation.
   void _panEndHandler(DragEndDetails details) {
-    if (_rotationController.status != AnimationStatus.forward &&
-        (widget.touchToRotate || _velocity != null)) {
+    if (_animationController.status != AnimationStatus.forward && (widget.touchToRotate || _velocity != 0)) {
       startAnimation();
       autoPlayRestart();
-      _velocity = null;
+      _velocity = 0;
     }
 
     autoPlayRestart();
@@ -393,13 +379,12 @@ class _SpinwheelState extends State<Spinwheel>
 
   // Function that starts the animation after a pan session.
   void startAnimation() async {
-    await _rotationController.forward();
+    await _animationController.forward();
   }
 
   void autoPlayCancel() {
-    if (_autoPlayTimer != null) if (widget.autoPlay &&
-        _autoPlayTimer.isActive) {
-      _autoPlayTimer.cancel();
+    if (_autoPlayTimer != null) if (widget.autoPlay && _autoPlayTimer!.isActive) {
+      _autoPlayTimer!.cancel();
     }
   }
 
@@ -421,12 +406,9 @@ class _SpinwheelState extends State<Spinwheel>
   @override
   void dispose() {
     super.dispose();
-    if (_rotationController != null) {
-      _rotationController.dispose();
-      _rotationController = null;
-      _rotationAnimation.removeListener(_rotationHandler);
-      _rotationAnimation.removeStatusListener(_rotationStatusHandler);
-    }
-    if (widget.autoPlay) _autoPlayTimer.cancel();
+    _animationController.dispose();
+    _rotationAnimation.removeListener(_rotationHandler);
+    _rotationAnimation.removeStatusListener(_rotationStatusHandler);
+    if (widget.autoPlay && _autoPlayTimer != null) _autoPlayTimer!.cancel();
   }
 }

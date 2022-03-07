@@ -4,7 +4,6 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import 'named_image.dart';
-import 'painter_presets.dart';
 
 class SpinwheelPainter extends CustomPainter {
   /// List of menu options as strings.
@@ -65,19 +64,19 @@ class SpinwheelPainter extends CustomPainter {
     this._shutterPaint,
     this._orientation,
   ) : _sectorAngle = 2 * pi / _itemCount {
-    setPresets();
+    // setPresets();
   }
 
-  void setPresets() {
-    PainterPresets presets = PainterPresets();
-    _wheelPaint = _wheelPaint ?? presets.wheelPaintPreset;
-    _borderPaint = _borderPaint ?? presets.borderPaintPreset;
-    _sectorDividerPaint =
-        _sectorDividerPaint ?? presets.sectorDividerPaintPreset;
-    _centerPiecePaint = _centerPiecePaint ?? presets.centerPiecePaintPreset;
-    _highlightPaint = _highlightPaint ?? presets.highlightPaintPreset;
-    _shutterPaint = _shutterPaint ?? presets.shutterPaintPreset;
-  }
+  // void setPresets() {
+  //   PainterPresets presets = PainterPresets();
+  //   _wheelPaint = _wheelPaint ?? presets.wheelPaintPreset;
+  //   _borderPaint = _borderPaint ?? presets.borderPaintPreset;
+  //   _sectorDividerPaint =
+  //       _sectorDividerPaint ?? presets.sectorDividerPaintPreset;
+  //   _centerPiecePaint = _centerPiecePaint ?? presets.centerPiecePaintPreset;
+  //   _highlightPaint = _highlightPaint ?? presets.highlightPaintPreset;
+  //   _shutterPaint = _shutterPaint ?? presets.shutterPaintPreset;
+  // }
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -91,18 +90,13 @@ class SpinwheelPainter extends CustomPainter {
     final circleCenter = Offset(width / 2, height / 2);
 
     // Angles at which each consecutive sector will be drawn on the wheel.
-    final sectorOffsetAngles = [
-      for (int i = 0; i < _itemCount; i++) _sectorAngle * i
-    ];
+    final sectorOffsetAngles = [for (int i = 0; i < _itemCount; i++) _sectorAngle * i];
 
     // Angular offset for each string of text in the provided list of options.
     // 2pi radian (360°) is temporarily added for calculating textRotation of the
     // last element in the list of options.
     sectorOffsetAngles.add(2 * pi);
-    final itemRotations = [
-      for (int i = 0; i < _itemCount; i++)
-        (sectorOffsetAngles[i] + sectorOffsetAngles[i + 1]) / 2
-    ];
+    final itemRotations = [for (int i = 0; i < _itemCount; i++) (sectorOffsetAngles[i] + sectorOffsetAngles[i + 1]) / 2];
     sectorOffsetAngles.remove(2 * pi);
 
     // Value used for rotation animation.
@@ -114,18 +108,10 @@ class SpinwheelPainter extends CustomPainter {
     }
 
     // Function where most of the painting occurs.
-    paintSpinner(canvas, width, height, radius, circleCenter, rot,
-        sectorOffsetAngles, itemRotations);
+    paintSpinner(canvas, width, height, radius, circleCenter, rot, sectorOffsetAngles, itemRotations);
   }
 
-  paintSpinner(
-      Canvas canvas,
-      double width,
-      double height,
-      double radius,
-      Offset circleCenter,
-      double rot,
-      List<double> sectorOffsetAngles,
+  paintSpinner(Canvas canvas, double width, double height, double radius, Offset circleCenter, double rot, List<double> sectorOffsetAngles,
       List<double> itemRotations) {
     canvas.save();
     // Painting the big circle/wheel.
@@ -149,23 +135,18 @@ class SpinwheelPainter extends CustomPainter {
 
     // Drawing components according to settings provided.
     if (_isImageList && _loadedImages != null)
-      drawImages(
-          canvas, radius, circleCenter, sectorOffsetAngles, itemRotations);
-    else if (!_isImageList)
-      drawTexts(canvas, radius, circleCenter, itemRotations);
+      drawImages(canvas, radius, circleCenter, sectorOffsetAngles, itemRotations);
+    else if (!_isImageList) drawTexts(canvas, radius, circleCenter, itemRotations);
 
-    if (_shouldDrawDividers)
-      drawSectorDividers(canvas, radius, circleCenter, sectorOffsetAngles);
+    if (_shouldDrawDividers) drawSectorDividers(canvas, radius, circleCenter, sectorOffsetAngles);
     canvas.restore();
 
     rotateCanvas(canvas, radius, pi * 1.5);
     rotateCanvas(canvas, radius, _orientation);
 
-    if (_shouldHighlight)
-      drawSelectionSector(canvas, radius, circleCenter, sectorOffsetAngles);
+    if (_shouldHighlight) drawSelectionSector(canvas, radius, circleCenter, sectorOffsetAngles);
 
-    if (_hideOthers)
-      drawShutter(canvas, radius, circleCenter, sectorOffsetAngles);
+    if (_hideOthers) drawShutter(canvas, radius, circleCenter, sectorOffsetAngles);
 
     if (_shouldDrawCenterPiece) drawCenterPiece(canvas, radius, circleCenter);
   }
@@ -188,16 +169,14 @@ class SpinwheelPainter extends CustomPainter {
     canvas.drawCircle(circleCenter, radius, _borderPaint);
   }
 
-  drawImages(Canvas canvas, double radius, Offset circleCenter,
-      List<double> sectorOffsetAngles, List<double> itemRotations) {
+  drawImages(Canvas canvas, double radius, Offset circleCenter, List<double> sectorOffsetAngles, List<double> itemRotations) {
     for (var i = 0; i < _itemCount; i++) {
       canvas.save();
 
       // Clipper in the shape of a sector.
       Path clip = Path();
       clip.moveTo(circleCenter.dx, circleCenter.dy);
-      clip.arcTo(Rect.fromCircle(center: circleCenter, radius: radius),
-          sectorOffsetAngles[i], _sectorAngle, false);
+      clip.arcTo(Rect.fromCircle(center: circleCenter, radius: radius), sectorOffsetAngles[i], _sectorAngle, false);
       clip.lineTo(circleCenter.dx, circleCenter.dy);
       canvas.clipPath(clip);
 
@@ -205,20 +184,15 @@ class SpinwheelPainter extends CustomPainter {
       rotateCanvas(canvas, radius, pi * 1.5);
 
       rotateCanvas(canvas, radius, itemRotations[i]);
-      paintLoadedImage(canvas, radius, circleCenter, _loadedImages[i],
-          (_items[i] as NamedImage));
+      paintLoadedImage(canvas, radius, circleCenter, _loadedImages[i], (_items[i] as NamedImage));
       canvas.restore();
     }
   }
 
-  void paintLoadedImage(Canvas canvas, double radius, Offset circleCenter,
-      ui.Image image, NamedImage imgInfo) {
+  void paintLoadedImage(Canvas canvas, double radius, Offset circleCenter, ui.Image image, NamedImage imgInfo) {
     paintImage(
       canvas: canvas,
-      rect: Rect.fromCenter(
-          center: Offset(radius * imgInfo.offsetX, radius * imgInfo.offsetY),
-          width: radius * 2,
-          height: radius * 2),
+      rect: Rect.fromCenter(center: Offset(radius * imgInfo.offsetX, radius * imgInfo.offsetY), width: radius * 2, height: radius * 2),
       image: image,
       colorFilter: imgInfo.filter,
       fit: BoxFit.scaleDown,
@@ -226,15 +200,13 @@ class SpinwheelPainter extends CustomPainter {
     );
   }
 
-  void drawTexts(Canvas canvas, double radius, Offset circleCenter,
-      List<double> itemRotations) {
+  void drawTexts(Canvas canvas, double radius, Offset circleCenter, List<double> itemRotations) {
     for (var i = 0; i < _itemCount; i++) {
       rotateCanvas(canvas, radius, itemRotations[i]);
       paintText(
         canvas,
         radius,
-        Offset(circleCenter.dx + (radius * 2) / 10,
-            circleCenter.dy - (radius * 2) / 15),
+        Offset(circleCenter.dx + (radius * 2) / 10, circleCenter.dy - (radius * 2) / 15),
         _items[i],
       );
       rotateCanvas(canvas, radius, -itemRotations[i]);
@@ -250,12 +222,7 @@ class SpinwheelPainter extends CustomPainter {
     // Painter that paints the text on to the canvas.
     var textPainter = TextPainter(
       maxLines: 1,
-      text: TextSpan(
-          text: text,
-          style: TextStyle(
-              fontSize: radius / 5,
-              color: Colors.black,
-              fontWeight: FontWeight.bold)),
+      text: TextSpan(text: text, style: TextStyle(fontSize: radius / 5, color: Colors.black, fontWeight: FontWeight.bold)),
       textDirection: TextDirection.ltr,
       textAlign: TextAlign.center,
       textWidthBasis: TextWidthBasis.longestLine,
@@ -265,12 +232,10 @@ class SpinwheelPainter extends CustomPainter {
     textPainter.paint(canvas, offset);
   }
 
-  void drawSectorDividers(Canvas canvas, double radius, Offset circleCenter,
-      List<double> sectorOffsetAngles) {
+  void drawSectorDividers(Canvas canvas, double radius, Offset circleCenter, List<double> sectorOffsetAngles) {
     for (var i = 0; i < _itemCount; i++) {
       rotateCanvas(canvas, radius, sectorOffsetAngles[i]);
-      canvas.drawLine(
-          circleCenter, Offset(radius * 2, radius), _sectorDividerPaint);
+      canvas.drawLine(circleCenter, Offset(radius * 2, radius), _sectorDividerPaint);
       rotateCanvas(canvas, radius, -sectorOffsetAngles[i]);
     }
   }
@@ -281,19 +246,13 @@ class SpinwheelPainter extends CustomPainter {
     Offset circleCenter,
     List<double> sectorOffsetAngles,
   ) {
-    if (_highlightWhileRotating ||
-        _rotationAnimation.status != AnimationStatus.forward) {
+    if (_highlightWhileRotating || _rotationAnimation.status != AnimationStatus.forward) {
       canvas.drawArc(
-          Rect.fromCircle(center: circleCenter, radius: radius),
-          sectorOffsetAngles[_selectSector],
-          _sectorAngle,
-          true,
-          _highlightPaint);
+          Rect.fromCircle(center: circleCenter, radius: radius), sectorOffsetAngles[_selectSector], _sectorAngle, true, _highlightPaint);
     }
   }
 
-  void drawShutter(Canvas canvas, double radius, Offset circleCenter,
-      List<double> sectorOffsetAngles) {
+  void drawShutter(Canvas canvas, double radius, Offset circleCenter, List<double> sectorOffsetAngles) {
     double shutterStartAngle;
     double sweepAngle = _sectorAngle * (_itemCount - 1);
     if (_selectSector + 1 < _itemCount)

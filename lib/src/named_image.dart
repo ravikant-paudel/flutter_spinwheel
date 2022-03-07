@@ -13,8 +13,8 @@ class NamedImage {
   /// Change [offsetY] (default: 1.5) to vertically offset.
   /// [fit] describes the bounding box of the image.
   NamedImage({
-    @required this.path,
-    @required this.name,
+    required this.path,
+    required this.name,
     this.offsetX = 1,
     this.offsetY = 1.5,
     this.fit = BoxFit.cover,
@@ -38,5 +38,5 @@ class NamedImage {
 
   /// Filter to use on image. By default, none. Refer to ColorFilter doc
   /// information on how to use.
-  ColorFilter filter;
+  ColorFilter? filter;
 }
